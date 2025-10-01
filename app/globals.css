@@ -1,0 +1,450 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-LightItalic.eot');
+    src: local('Gellix Light Italic'), local('Gellix-LightItalic'),
+        url('/fonts/gellix/Gellix-LightItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-LightItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-LightItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-LightItalic.ttf') format('truetype');
+    font-weight: 300;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-ExtraBold.eot');
+    src: local('Gellix ExtraBold'), local('Gellix-ExtraBold'),
+        url('/fonts/gellix/Gellix-ExtraBold.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-ExtraBold.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-ExtraBold.woff') format('woff'),
+        url('/fonts/gellix/Gellix-ExtraBold.ttf') format('truetype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-SemiBold.eot');
+    src: local('Gellix SemiBold'), local('Gellix-SemiBold'),
+        url('/fonts/gellix/Gellix-SemiBold.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-SemiBold.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-SemiBold.woff') format('woff'),
+        url('/fonts/gellix/Gellix-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-RegularItalic.eot');
+    src: local('Gellix Regular Italic'), local('Gellix-RegularItalic'),
+        url('/fonts/gellix/Gellix-RegularItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-RegularItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-RegularItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-RegularItalic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-ThinItalic.eot');
+    src: local('Gellix Thin Italic'), local('Gellix-ThinItalic'),
+        url('/fonts/gellix/Gellix-ThinItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-ThinItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-ThinItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-ThinItalic.ttf') format('truetype');
+    font-weight: 100;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-Bold.eot');
+    src: local('Gellix Bold'), local('Gellix-Bold'),
+        url('/fonts/gellix/Gellix-Bold.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-Bold.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-Bold.woff') format('woff'),
+        url('/fonts/gellix/Gellix-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-ExtraBoldItalic.eot');
+    src: local('Gellix ExtraBold Italic'), local('Gellix-ExtraBoldItalic'),
+        url('/fonts/gellix/Gellix-ExtraBoldItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-ExtraBoldItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-ExtraBoldItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-ExtraBoldItalic.ttf') format('truetype');
+    font-weight: 800;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-Regular.eot');
+    src: local('Gellix Regular'), local('Gellix-Regular'),
+        url('/fonts/gellix/Gellix-Regular.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-Regular.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-Regular.woff') format('woff'),
+        url('/fonts/gellix/Gellix-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-Medium.eot');
+    src: local('Gellix Medium'), local('Gellix-Medium'),
+        url('/fonts/gellix/Gellix-Medium.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-Medium.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-Medium.woff') format('woff'),
+        url('/fonts/gellix/Gellix-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-SemiBoldItalic.eot');
+    src: local('Gellix SemiBold Italic'), local('Gellix-SemiBoldItalic'),
+        url('/fonts/gellix/Gellix-SemiBoldItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-SemiBoldItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-SemiBoldItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-SemiBoldItalic.ttf') format('truetype');
+    font-weight: 600;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-Light.eot');
+    src: local('Gellix Light'), local('Gellix-Light'),
+        url('/fonts/gellix/Gellix-Light.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-Light.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-Light.woff') format('woff'),
+        url('/fonts/gellix/Gellix-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-BoldItalic.eot');
+    src: local('Gellix Bold Italic'), local('Gellix-BoldItalic'),
+        url('/fonts/gellix/Gellix-BoldItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-BoldItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-BoldItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-BoldItalic.ttf') format('truetype');
+    font-weight: bold;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-BlackItalic.eot');
+    src: local('Gellix Black Italic'), local('Gellix-BlackItalic'),
+        url('/fonts/gellix/Gellix-BlackItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-BlackItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-BlackItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-BlackItalic.ttf') format('truetype');
+    font-weight: 900;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-Thin.eot');
+    src: local('Gellix Thin'), local('Gellix-Thin'),
+        url('/fonts/gellix/Gellix-Thin.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-Thin.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-Thin.woff') format('woff'),
+        url('/fonts/gellix/Gellix-Thin.ttf') format('truetype');
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-Black.eot');
+    src: local('Gellix Black'), local('Gellix-Black'),
+        url('/fonts/gellix/Gellix-Black.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-Black.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-Black.woff') format('woff'),
+        url('/fonts/gellix/Gellix-Black.ttf') format('truetype');
+    font-weight: 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Gellix';
+    src: url('/fonts/gellix/Gellix-MediumItalic.eot');
+    src: local('Gellix Medium Italic'), local('Gellix-MediumItalic'),
+        url('/fonts/gellix/Gellix-MediumItalic.eot?#iefix') format('embedded-opentype'),
+        url('/fonts/gellix/Gellix-MediumItalic.woff2') format('woff2'),
+        url('/fonts/gellix/Gellix-MediumItalic.woff') format('woff'),
+        url('/fonts/gellix/Gellix-MediumItalic.ttf') format('truetype');
+    font-weight: 500;
+    font-style: italic;
+}
+
+body {
+    overflow-x: hidden;
+    font-family: 'Gellix';
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --color-background: var(--background);
+    --color-background2: var(--background2);
+    --color-foreground: var(--foreground);
+    --color-cblue: var(--cblue);
+    --color-cgold: var(--cgold);
+    --color-cpurple: var(--cpurple);
+    --color-cgray: var(--cgray);
+    --color-sec: var(--sec);
+    --color-muted1: var(--muted1);
+    --color-muted2: var(--muted2);
+    --color-muted3: var(--muted3);
+    --color-cborder: #E7E7E7;
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+    --radius: 0.625rem;
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --cblue: oklch(25.04% 0.086 267.61);
+    --cgold: oklch(70.90% 0.105 82.93);
+    --cpurple: oklch(40.06% 0.134 299.77);
+    --cgray: oklch(70.31% 0.003 286.33);
+    --sec: oklch(96.12% 0.000 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+}
+
+.dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --cblue: oklch(25.04% 0.086 267.61);
+    --cgold: oklch(70.90% 0.105 82.93);
+    --cpurple: oklch(40.06% 0.134 299.77);
+    --cgray: oklch(70.31% 0.003 286.33);
+    --sec: oklch(96.12% 0.000 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    .shadow1 {
+        @apply border border-[#EEEEEE];
+        box-shadow: 0px 1px 3px 0px #0000001A;
+    }
+
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 4px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: hsl(var(--muted-foreground) / 0.3);
+        border-radius: 4px;
+        border: 1px solid transparent;
+        background-clip: content-box;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
+        background-clip: content-box;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+}
+
+@layer base {
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+        box-shadow: 0 0 0px 1000px transparent inset !important;
+        -webkit-text-fill-color: black !important;
+        transition: background-color 9999s ease-in-out 0s !important;
+    }
+}
+
+.spinner-loader {
+    width: 70.4px;
+    height: 70.4px;
+    --clr: rgb(255, 255, 255);
+    --clr-alpha: rgba(136, 130, 125, 0.1);
+    animation: spinner-loader 1.6s infinite ease;
+    transform-style: preserve-3d;
+}
+
+.spinner-loader>div {
+    background-color: var(--clr-alpha);
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    border: 3.5px solid var(--clr);
+}
+
+.spinner-loader div:nth-of-type(1) {
+    transform: translateZ(-35.2px) rotateY(180deg);
+}
+
+.spinner-loader div:nth-of-type(2) {
+    transform: rotateY(-270deg) translateX(50%);
+    transform-origin: top right;
+}
+
+.spinner-loader div:nth-of-type(3) {
+    transform: rotateY(270deg) translateX(-50%);
+    transform-origin: center left;
+}
+
+.spinner-loader div:nth-of-type(4) {
+    transform: rotateX(90deg) translateY(-50%);
+    transform-origin: top center;
+}
+
+.spinner-loader div:nth-of-type(5) {
+    transform: rotateX(-90deg) translateY(50%);
+    transform-origin: bottom center;
+}
+
+.spinner-loader div:nth-of-type(6) {
+    transform: translateZ(35.2px);
+}
+
+@keyframes spinner-loader {
+    0% {
+        transform: rotate(45deg) rotateX(-25deg) rotateY(25deg);
+    }
+
+    50% {
+        transform: rotate(45deg) rotateX(-385deg) rotateY(25deg);
+    }
+
+    100% {
+        transform: rotate(45deg) rotateX(-385deg) rotateY(385deg);
+    }
+}
