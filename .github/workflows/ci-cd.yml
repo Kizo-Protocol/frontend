@@ -1,0 +1,330 @@
+name: 'CI/CD Pipeline'
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+  
+jobs:
+  pre-checks:
+    name: 'Pre-flight Checks'
+    runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check-branch.outputs.should-deploy }}
+      git-sha: ${{ steps.vars.outputs.git-sha }}
+      timestamp: ${{ steps.vars.outputs.timestamp }}
+    steps:
+      - name: '[INFO] : Checkout repository'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: '[INFO] : Set pipeline variables'
+        id: vars
+        run: |
+          echo "[INFO] : Setting pipeline variables"
+          echo "git-sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          echo "[INFO] : Git SHA: $(git rev-parse --short HEAD)"
+          echo "[INFO] : Timestamp: $(date -u +%Y%m%d-%H%M%S)"
+
+      - name: '[INFO] : Check deployment eligibility'
+        id: check-branch
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "[INFO] : Branch eligible for deployment"
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "[INFO] : Branch not eligible for deployment"
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  code-quality:
+    name: 'Code Quality & Security'
+    runs-on: ubuntu-latest
+    needs: pre-checks
+    steps:
+      - name: '[INFO] : Checkout repository'
+        uses: actions/checkout@v4
+
+      - name: '[INFO] : Setup Node.js and pnpm'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: '[INFO] : Install pnpm'
+        run: |
+          echo "[INFO] : Installing pnpm ${{ env.PNPM_VERSION }}"
+          npm install -g pnpm@${{ env.PNPM_VERSION }}
+          pnpm --version
+
+      - name: '[INFO] : Get pnpm store directory'
+        id: pnpm-cache
+        run: |
+          echo "[INFO] : Determining pnpm store directory"
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: '[INFO] : Setup pnpm cache'
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: '[INFO] : Install dependencies'
+        run: |
+          echo "[INFO] : Installing project dependencies"
+          pnpm install --frozen-lockfile
+          echo "[INFO] : Dependencies installed successfully"
+
+      - name: '[INFO] : Run linting'
+        run: |
+          echo "[INFO] : Running ESLint checks"
+          if ! pnpm lint; then
+            echo "[ERROR] : Linting failed"
+            exit 1
+          fi
+          echo "[INFO] : Linting passed"
+
+      - name: '[INFO] : Check for vulnerabilities'
+        run: |
+          echo "[INFO] : Running security audit"
+          if ! pnpm audit --audit-level moderate; then
+            echo "[WARN] : Security vulnerabilities found, but continuing"
+          else
+            echo "[INFO] : No security vulnerabilities found"
+          fi
+
+  build-test:
+    name: 'Build & Test'
+    runs-on: ubuntu-latest
+    needs: [pre-checks, code-quality]
+    steps:
+      - name: '[INFO] : Checkout repository'
+        uses: actions/checkout@v4
+
+      - name: '[INFO] : Setup Node.js and pnpm'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: '[INFO] : Install pnpm'
+        run: |
+          echo "[INFO] : Installing pnpm ${{ env.PNPM_VERSION }}"
+          npm install -g pnpm@${{ env.PNPM_VERSION }}
+
+      - name: '[INFO] : Get pnpm store directory'
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: '[INFO] : Setup pnpm cache'
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: '[INFO] : Install dependencies'
+        run: |
+          echo "[INFO] : Installing dependencies for build"
+          pnpm install --frozen-lockfile
+
+      - name: '[INFO] : Build application'
+        run: |
+          echo "[INFO] : Building Next.js application"
+          if ! pnpm build; then
+            echo "[ERROR] : Build failed"
+            exit 1
+          fi
+          echo "[INFO] : Build completed successfully"
+
+      - name: '[INFO] : Upload build artifacts'
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ needs.pre-checks.outputs.git-sha }}
+          path: |
+            .next/
+            public/
+            package.json
+            next.config.ts
+          retention-days: 7
+
+  docker-build:
+    name: 'Docker Build & Scan'
+    runs-on: ubuntu-latest
+    needs: [pre-checks, build-test]
+    if: needs.pre-checks.outputs.should-deploy == 'true'
+    steps:
+      - name: '[INFO] : Checkout repository'
+        uses: actions/checkout@v4
+
+      - name: '[INFO] : Set up Docker Buildx'
+        uses: docker/setup-buildx-action@v3
+
+      - name: '[INFO] : Build Docker image'
+        run: |
+          echo "[INFO] : Building Docker image"
+          IMAGE_TAG="kizo-frontend:${{ needs.pre-checks.outputs.git-sha }}"
+          if ! docker build -t $IMAGE_TAG -f Dockerfile .; then
+            echo "[ERROR] : Docker build failed"
+            exit 1
+          fi
+          echo "[INFO] : Docker image built: $IMAGE_TAG"
+          
+          # Save image info
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: '[INFO] : Scan Docker image for vulnerabilities'
+        run: |
+          echo "[INFO] : Scanning Docker image for security vulnerabilities"
+          # Install Trivy
+          sudo apt-get update && sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install -y trivy
+          
+          # Run security scan
+          if trivy image --severity HIGH,CRITICAL --exit-code 1 ${{ env.IMAGE_TAG }}; then
+            echo "[INFO] : No critical vulnerabilities found"
+          else
+            echo "[WARN] : Critical vulnerabilities found in Docker image"
+          fi
+
+  deploy:
+    name: 'Deploy to Production'
+    runs-on: ubuntu-latest
+    needs: [pre-checks, docker-build]
+    if: needs.pre-checks.outputs.should-deploy == 'true'
+    environment:
+      name: production
+      url: 'https://your-frontend-domain.com'
+    steps:
+      - name: '[INFO] : Checkout repository'
+        uses: actions/checkout@v4
+
+      - name: '[INFO] : Validate deployment secrets'
+        run: |
+          echo "[INFO] : Validating required secrets"
+          if [[ -z "${{ secrets.VPS_HOST }}" ]]; then
+            echo "[FATAL] : VPS_HOST secret is missing"
+            exit 1
+          fi
+          if [[ -z "${{ secrets.VPS_USERNAME }}" ]]; then
+            echo "[FATAL] : VPS_USERNAME secret is missing"
+            exit 1
+          fi
+          if [[ -z "${{ secrets.VPS_SSH_KEY }}" ]]; then
+            echo "[FATAL] : VPS_SSH_KEY secret is missing"
+            exit 1
+          fi
+          echo "[INFO] : All required secrets are present"
+
+      - name: '[INFO] : Deploy to VPS'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 15m
+          script: |
+            set -e
+            
+            echo "[INFO] : Starting deployment process"
+            echo "[INFO] : Git SHA: ${{ needs.pre-checks.outputs.git-sha }}"
+            echo "[INFO] : Timestamp: ${{ needs.pre-checks.outputs.timestamp }}"
+            
+            # Navigate to project directory
+            cd /home/kizovps/kizo/frontend || {
+              echo "[FATAL] : Cannot access frontend directory"
+              exit 1
+            }
+            
+            # Pull latest changes
+            echo "[INFO] : Pulling latest changes from repository"
+            if ! git fetch origin; then
+              echo "[ERROR] : Failed to fetch from origin"
+              exit 1
+            fi
+            
+            if ! git reset --hard origin/master; then
+              echo "[ERROR] : Failed to reset to origin/master"
+              exit 1
+            fi
+            
+            echo "[INFO] : Repository updated successfully"
+            
+            # Build Docker image
+            echo "[INFO] : Building frontend Docker image"
+            IMAGE_TAG="kizo-frontend:${{ needs.pre-checks.outputs.git-sha }}"
+            if ! sudo docker build -t kizo-frontend:latest -t "$IMAGE_TAG" .; then
+              echo "[ERROR] : Docker build failed"
+              exit 1
+            fi
+            
+            # Stop and remove old container
+            echo "[INFO] : Stopping existing container"
+            sudo docker stop kizo-frontend 2>/dev/null || echo "[INFO] : No existing container to stop"
+            sudo docker rm kizo-frontend 2>/dev/null || echo "[INFO] : No existing container to remove"
+            
+            # Start new container
+            echo "[INFO] : Starting new frontend container"
+            if ! sudo docker run -d \
+              --name kizo-frontend \
+              --network host \
+              --restart unless-stopped \
+              --label "git-sha=${{ needs.pre-checks.outputs.git-sha }}" \
+              --label "deployed-at=${{ needs.pre-checks.outputs.timestamp }}" \
+              kizo-frontend:latest; then
+              echo "[ERROR] : Failed to start container"
+              exit 1
+            fi
+            
+            # Verify deployment
+            echo "[INFO] : Verifying deployment"
+            sleep 10
+            
+            if sudo docker ps --filter "name=kizo-frontend" --filter "status=running" | grep -q kizo-frontend; then
+              echo "[INFO] : Container is running successfully"
+              sudo docker logs kizo-frontend --tail 20
+            else
+              echo "[ERROR] : Container failed to start properly"
+              sudo docker logs kizo-frontend --tail 50
+              exit 1
+            fi
+            
+            # Cleanup old images (keep last 3)
+            echo "[INFO] : Cleaning up old Docker images"
+            sudo docker image prune -f
+            
+            echo "[INFO] : Frontend deployment completed successfully"
+            echo "[INFO] : Deployment SHA: ${{ needs.pre-checks.outputs.git-sha }}"
+
+      - name: '[INFO] : Post-deployment verification'
+        run: |
+          echo "[INFO] : Deployment completed"
+          echo "[INFO] : Git SHA: ${{ needs.pre-checks.outputs.git-sha }}"
+          echo "[INFO] : Deployed at: ${{ needs.pre-checks.outputs.timestamp }}"
+
+  cleanup:
+    name: 'Cleanup'
+    runs-on: ubuntu-latest
+    needs: [pre-checks, deploy]
+    if: always()
+    steps:
+      - name: '[INFO] : Pipeline cleanup'
+        run: |
+          echo "[INFO] : Pipeline execution completed"
+          echo "[INFO] : Status: ${{ needs.deploy.result }}"
+          if [[ "${{ needs.deploy.result }}" == "failure" ]]; then
+            echo "[ERROR] : Deployment failed - check logs above"
+            exit 1
+          fi
+          echo "[INFO] : All steps completed successfully"

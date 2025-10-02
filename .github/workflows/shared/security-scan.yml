@@ -1,0 +1,57 @@
+name: 'Shared Security Scan'
+
+on:
+  workflow_call:
+    inputs:
+      project-type:
+        required: true
+        type: string
+      severity-level:
+        required: false
+        type: string
+        default: 'HIGH,CRITICAL'
+
+jobs:
+  security-scan:
+    name: 'Security Analysis'
+    runs-on: ubuntu-latest
+    steps:
+      - name: '[INFO] : Checkout repository'
+        uses: actions/checkout@v4
+
+      - name: '[INFO] : Run CodeQL Analysis'
+        if: inputs.project-type == 'frontend'
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'typescript,javascript'
+
+      - name: '[INFO] : Run CodeQL Analysis'
+        if: inputs.project-type != 'frontend'
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'rust'
+
+      - name: '[INFO] : Perform CodeQL Analysis'
+        uses: github/codeql-action/analyze@v3
+
+      - name: '[INFO] : Scan for secrets'
+        run: |
+          echo "[INFO] : Scanning for exposed secrets and credentials"
+          # Install gitleaks
+          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/scripts/install.sh | sh -s -- -b /usr/local/bin
+          
+          if gitleaks detect --verbose --no-git; then
+            echo "[INFO] : No secrets detected"
+          else
+            echo "[WARN] : Potential secrets found in code"
+          fi
+
+      - name: '[INFO] : License compliance check'
+        run: |
+          echo "[INFO] : Checking license compliance"
+          if [[ "${{ inputs.project-type }}" == "frontend" ]]; then
+            npx license-checker --summary
+          else
+            cargo install cargo-license --quiet
+            cargo license
+          fi
