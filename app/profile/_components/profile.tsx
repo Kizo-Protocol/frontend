@@ -80,15 +80,12 @@ export default function Profile() {
     const formData = new FormData();
 
     formData.append("file", file);
-    formData.append(
-      "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "kizo_preset",
-    );
+    formData.append("upload_preset", "z6euuqyl");
 
+    const cloudName =
+      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dv3z889zh";
     const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${
-        process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "kizo-cloud"
-      }/image/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
       {
         method: "POST",
         body: formData,
@@ -96,7 +93,9 @@ export default function Profile() {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to upload image");
+      const errorData = await response.json().catch(() => ({}));
+
+      throw new Error(errorData?.error?.message || "Failed to upload image");
     }
 
     const data = await response.json();
@@ -355,16 +354,24 @@ export default function Profile() {
 
                         <div className="space-y-2">
                           <Label>Profile Picture</Label>
-                          <button
+                          <div
                             className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
                               isDragging
                                 ? "border-primary bg-primary/5"
                                 : "border-muted-foreground/25 hover:border-muted-foreground/50"
                             } ${isUploading ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => fileInputRef.current?.click()}
                             onDragLeave={handleDragLeave}
                             onDragOver={handleDragOver}
                             onDrop={handleDrop}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                fileInputRef.current?.click();
+                              }
+                            }}
                           >
                             <input
                               ref={fileInputRef}
@@ -427,7 +434,7 @@ export default function Profile() {
                                 )}
                               </div>
                             )}
-                          </button>
+                          </div>
                         </div>
 
                         <div className="flex gap-2 pt-4">
