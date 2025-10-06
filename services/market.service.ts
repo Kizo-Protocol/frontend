@@ -217,7 +217,7 @@ export const marketService = {
   ): Promise<MarketListResponse> => {
     return marketService.getAllMarkets({
       status: "active",
-      sortBy: "updatedAt",
+      sortBy: "activity",
       sortDir: "desc",
       limit,
     });

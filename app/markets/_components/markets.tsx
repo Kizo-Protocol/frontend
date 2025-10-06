@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
-import { Search, Loader2 } from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { Search, Loader2, Filter } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ import { useBet } from "@/hooks/mutation/use-bet";
 import { YieldBadge } from "@/components/market/yield-badge";
 import { MultiStepTransactionDialog } from "@/components/dialog/multi-step-transaction-dialog";
 import { normalize } from "@/lib/helper/bignumber";
+import { HoverPopover } from "@/components/ui/hover-popover";
 import { Market } from "@/types/market";
 import {
   KIZO_CONTRACT_ADDRESS,
@@ -58,7 +59,9 @@ export default function Markets() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [bettingState, setBettingState] = useState<BettingState | null>(null);
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const debouncedSearchQuery = useDebounce(searchQuery, 2000);
   const itemsPerPage = 30;
 
   const betTransaction = useBet();
@@ -68,11 +71,11 @@ export default function Markets() {
 
   const searchResults = useSearchMarkets(
     debouncedSearchQuery.trim(),
-    2000,
+    3000,
     hasSearch,
   );
 
-  const trendingResults = useTrendingMarkets(200, !hasSearch);
+  const trendingResults = useTrendingMarkets(200, true);
   const volumeResults = useMarkets(
     {
       sortBy: "volume",
@@ -80,7 +83,7 @@ export default function Markets() {
       status: "active",
       limit: 200,
     },
-    !hasSearch,
+    true,
   );
   const latestResults = useMarkets(
     {
@@ -89,7 +92,7 @@ export default function Markets() {
       status: "active",
       limit: 200,
     },
-    !hasSearch,
+    true,
   );
 
   const currentResults = useMemo(() => {
@@ -120,6 +123,40 @@ export default function Markets() {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeFilter, debouncedSearchQuery]);
+
+  const prevLoadingRef = useRef(isLoading);
+
+  useEffect(() => {
+    if (
+      prevLoadingRef.current &&
+      !isLoading &&
+      searchQuery &&
+      searchInputRef.current
+    ) {
+      searchInputRef.current.focus();
+    }
+    prevLoadingRef.current = isLoading;
+  }, [isLoading, searchQuery]);
+
+  const handleFilterChange = (filter: FilterType) => {
+    setActiveFilter(filter);
+    setSearchQuery("");
+    setCurrentPage(1);
+    setIsFilterOpen(false);
+  };
+
+  const getFilterLabel = (filter: FilterType) => {
+    switch (filter) {
+      case "trending":
+        return "Trending";
+      case "volume":
+        return "Highest Volume";
+      case "latest":
+        return "Latest";
+      default:
+        return "Trending";
+    }
+  };
 
   const handleBetClick = (blockchainMarketId: number, position: boolean) => {
     setBettingState({ blockchainMarketId, position, amount: "" });
@@ -284,64 +321,110 @@ export default function Markets() {
     return (
       <div className="w-full">
         <div className="border-[0.5px] rounded-2xl flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                className={`py-2 px-3 rounded-2xl font-medium text-sm transition-all ${
-                  activeFilter === "trending" && !hasSearch
-                    ? "bg-foreground/20 text-white"
-                    : "border hover:bg-foreground/5"
-                }`}
-                variant="outline"
-                onClick={() => {
-                  setActiveFilter("trending");
-                  setSearchQuery("");
-                  setCurrentPage(1);
-                }}
-              >
-                Trending
-              </Button>
-              <Button
-                className={`py-2 px-3 rounded-2xl text-sm transition-all ${
-                  activeFilter === "volume" && !hasSearch
-                    ? "bg-foreground/20 text-white"
-                    : "border hover:bg-foreground/5"
-                }`}
-                variant="outline"
-                onClick={() => {
-                  setActiveFilter("volume");
-                  setSearchQuery("");
-                  setCurrentPage(1);
-                }}
-              >
-                Highest Volume
-              </Button>
-              <Button
-                className={`py-2 px-3 rounded-2xl text-sm transition-all ${
-                  activeFilter === "latest" && !hasSearch
-                    ? "bg-foreground/20 text-white"
-                    : "border hover:bg-foreground/5"
-                }`}
-                variant="outline"
-                onClick={() => {
-                  setActiveFilter("latest");
-                  setSearchQuery("");
-                  setCurrentPage(1);
-                }}
-              >
-                Latest
-              </Button>
+          <div className="flex items-center justify-between px-5 py-3 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex flex-wrap items-center gap-3">
+                <Button
+                  className={`py-2 px-3 rounded-2xl font-medium text-sm transition-all ${
+                    activeFilter === "trending" && !hasSearch
+                      ? "bg-foreground/20 text-white"
+                      : "border hover:bg-foreground/5"
+                  }`}
+                  variant="outline"
+                  onClick={() => handleFilterChange("trending")}
+                >
+                  Trending
+                </Button>
+                <Button
+                  className={`py-2 px-3 rounded-2xl text-sm transition-all ${
+                    activeFilter === "volume" && !hasSearch
+                      ? "bg-foreground/20 text-white"
+                      : "border hover:bg-foreground/5"
+                  }`}
+                  variant="outline"
+                  onClick={() => handleFilterChange("volume")}
+                >
+                  Highest Volume
+                </Button>
+                <Button
+                  className={`py-2 px-3 rounded-2xl text-sm transition-all ${
+                    activeFilter === "latest" && !hasSearch
+                      ? "bg-foreground/20 text-white"
+                      : "border hover:bg-foreground/5"
+                  }`}
+                  variant="outline"
+                  onClick={() => handleFilterChange("latest")}
+                >
+                  Latest
+                </Button>
+              </div>
+
+              <div className="md:hidden">
+                <HoverPopover
+                  align="start"
+                  content={
+                    <div className="space-y-1">
+                      <button
+                        className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${
+                          activeFilter === "trending"
+                            ? "bg-foreground/20 text-white font-medium"
+                            : "hover:bg-foreground/5"
+                        }`}
+                        onClick={() => handleFilterChange("trending")}
+                      >
+                        Trending
+                      </button>
+                      <button
+                        className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${
+                          activeFilter === "volume"
+                            ? "bg-foreground/20 text-white font-medium"
+                            : "hover:bg-foreground/5"
+                        }`}
+                        onClick={() => handleFilterChange("volume")}
+                      >
+                        Highest Volume
+                      </button>
+                      <button
+                        className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${
+                          activeFilter === "latest"
+                            ? "bg-foreground/20 text-white font-medium"
+                            : "hover:bg-foreground/5"
+                        }`}
+                        onClick={() => handleFilterChange("latest")}
+                      >
+                        Latest
+                      </button>
+                    </div>
+                  }
+                  contentClassName="w-48"
+                  isOpen={isFilterOpen}
+                  setIsOpen={setIsFilterOpen}
+                  trigger={
+                    <Button
+                      className="py-2 px-3 rounded-2xl text-sm border hover:bg-foreground/5 transition-all"
+                      variant="outline"
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      <span className="font-medium">
+                        {getFilterLabel(activeFilter)}
+                      </span>
+                    </Button>
+                  }
+                />
+              </div>
             </div>
-            <div className="relative max-w-[250px] w-full">
+
+            <div className="relative w-full max-w-[250px]">
               <Input
-                className={`rounded-2xl w-full text-sm pr-10 transition-colors ${
-                  isUserTyping ? "border-muted-foreground/50" : ""
-                }`}
-                placeholder="Search markets... (min 2 chars)"
+                ref={searchInputRef}
+                className={`rounded-2xl w-full text-sm transition-colors ${
+                  hasSearch || isUserTyping ? "pr-16" : "pr-10"
+                } ${isUserTyping ? "border-muted-foreground/50" : ""}`}
+                placeholder="Search markets..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 {isSearching ? (
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                 ) : isUserTyping ? (
@@ -355,7 +438,7 @@ export default function Markets() {
               {(hasSearch || isUserTyping) && (
                 <button
                   aria-label="Clear search"
-                  className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors text-lg leading-none"
+                  className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors text-lg leading-none cursor-pointer z-10"
                   onClick={() => setSearchQuery("")}
                 >
                   ×
@@ -418,62 +501,110 @@ export default function Markets() {
         onOpenChange={setIsDialogOpen}
       />
       <div className="border-[0.5px] rounded-2xl flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              className={`py-2 px-3 rounded-2xl font-medium text-sm transition-all ${
-                activeFilter === "trending" && !hasSearch
-                  ? "bg-foreground/20 text-white"
-                  : "border hover:bg-foreground/5"
-              }`}
-              variant="outline"
-              onClick={() => {
-                setActiveFilter("trending");
-                setSearchQuery("");
-              }}
-            >
-              Trending
-            </Button>
-            <Button
-              className={`py-2 px-3 rounded-2xl text-sm transition-all ${
-                activeFilter === "volume" && !hasSearch
-                  ? "bg-foreground/20 text-white"
-                  : "border hover:bg-foreground/5"
-              }`}
-              variant="outline"
-              onClick={() => {
-                setActiveFilter("volume");
-                setSearchQuery("");
-              }}
-            >
-              Highest Volume
-            </Button>
-            <Button
-              className={`py-2 px-3 rounded-2xl text-sm transition-all ${
-                activeFilter === "latest" && !hasSearch
-                  ? "bg-foreground/20 text-white"
-                  : "border hover:bg-foreground/5"
-              }`}
-              variant="outline"
-              onClick={() => {
-                setActiveFilter("latest");
-                setSearchQuery("");
-              }}
-            >
-              Latest
-            </Button>
+        <div className="flex items-center justify-between px-5 py-3 gap-3">
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex flex-wrap items-center gap-3">
+              <Button
+                className={`py-2 px-3 rounded-2xl font-medium text-sm transition-all ${
+                  activeFilter === "trending" && !hasSearch
+                    ? "bg-foreground/20 text-white"
+                    : "border hover:bg-foreground/5"
+                }`}
+                variant="outline"
+                onClick={() => handleFilterChange("trending")}
+              >
+                Trending
+              </Button>
+              <Button
+                className={`py-2 px-3 rounded-2xl text-sm transition-all ${
+                  activeFilter === "volume" && !hasSearch
+                    ? "bg-foreground/20 text-white"
+                    : "border hover:bg-foreground/5"
+                }`}
+                variant="outline"
+                onClick={() => handleFilterChange("volume")}
+              >
+                Highest Volume
+              </Button>
+              <Button
+                className={`py-2 px-3 rounded-2xl text-sm transition-all ${
+                  activeFilter === "latest" && !hasSearch
+                    ? "bg-foreground/20 text-white"
+                    : "border hover:bg-foreground/5"
+                }`}
+                variant="outline"
+                onClick={() => handleFilterChange("latest")}
+              >
+                Latest
+              </Button>
+            </div>
+
+            <div className="md:hidden">
+              <HoverPopover
+                align="start"
+                content={
+                  <div className="space-y-1">
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${
+                        activeFilter === "trending"
+                          ? "bg-foreground/20 text-white font-medium"
+                          : "hover:bg-foreground/5"
+                      }`}
+                      onClick={() => handleFilterChange("trending")}
+                    >
+                      Trending
+                    </button>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${
+                        activeFilter === "volume"
+                          ? "bg-foreground/20 text-white font-medium"
+                          : "hover:bg-foreground/5"
+                      }`}
+                      onClick={() => handleFilterChange("volume")}
+                    >
+                      Highest Volume
+                    </button>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${
+                        activeFilter === "latest"
+                          ? "bg-foreground/20 text-white font-medium"
+                          : "hover:bg-foreground/5"
+                      }`}
+                      onClick={() => handleFilterChange("latest")}
+                    >
+                      Latest
+                    </button>
+                  </div>
+                }
+                contentClassName="w-48"
+                isOpen={isFilterOpen}
+                setIsOpen={setIsFilterOpen}
+                trigger={
+                  <Button
+                    className="py-2 px-3 rounded-2xl text-sm border hover:bg-foreground/5 transition-all"
+                    variant="outline"
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    <span className="font-medium">
+                      {getFilterLabel(activeFilter)}
+                    </span>
+                  </Button>
+                }
+              />
+            </div>
           </div>
 
-          <div className="relative max-w-[250px] w-full">
+          <div className="relative w-full max-w-[250px]">
             <Input
-              className={`rounded-2xl w-full text-sm pr-10 transition-colors ${
-                isUserTyping ? "border-muted-foreground/50" : ""
-              }`}
-              placeholder="Search markets... (min 2 chars)"
+              ref={searchInputRef}
+              className={`rounded-2xl w-full text-sm transition-colors ${
+                hasSearch || isUserTyping ? "pr-16" : "pr-10"
+              } ${isUserTyping ? "border-muted-foreground/50" : ""}`}
+              placeholder="Search markets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               {isSearching ? (
                 <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
               ) : isUserTyping ? (
@@ -487,7 +618,7 @@ export default function Markets() {
             {(hasSearch || isUserTyping) && (
               <button
                 aria-label="Clear search"
-                className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors text-lg leading-none"
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors text-lg leading-none cursor-pointer z-10"
                 onClick={() => setSearchQuery("")}
               >
                 ×
