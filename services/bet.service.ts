@@ -393,4 +393,71 @@ export const betService = {
 
     return { bettable: true };
   },
+
+  /**
+   * Check if bet is claimable
+   */
+  isBetClaimable: (bet: Bet): { claimable: boolean; reason?: string } => {
+    if (bet.status !== "won") {
+      return { claimable: false, reason: "Bet is not won" };
+    }
+
+    if (!bet.market) {
+      return { claimable: false, reason: "Market data not available" };
+    }
+
+    if (bet.market.status !== "resolved") {
+      return { claimable: false, reason: "Market is not resolved yet" };
+    }
+
+    if (!bet.blockchainBetId) {
+      return { claimable: false, reason: "Bet not available on blockchain" };
+    }
+
+    if (!bet.market.blockchainMarketId) {
+      return { claimable: false, reason: "Market not available on blockchain" };
+    }
+
+    return { claimable: true };
+  },
+
+  /**
+   * Calculate potential winnings for a bet
+   */
+  calculateWinnings: (
+    bet: Bet,
+  ): { amount: string; formatted: string; hasWinnings: boolean } => {
+    if (bet.status !== "won" || !bet.payout) {
+      return {
+        amount: "0",
+        formatted: "0",
+        hasWinnings: false,
+      };
+    }
+
+    const winnings = betService.formatAmount(bet.payout);
+
+    return {
+      amount: bet.payout,
+      formatted: winnings,
+      hasWinnings: parseFloat(bet.payout) > 0,
+    };
+  },
+
+  /**
+   * Get claim button text based on bet status
+   */
+  getClaimButtonText: (bet: Bet): string => {
+    const claimable = betService.isBetClaimable(bet);
+
+    if (!claimable.claimable) {
+      return claimable.reason || "Cannot Claim";
+    }
+
+    return "Claim Winnings";
+  },
+
+  getBetIndex: (bet: Bet): number => {
+    return bet.blockchainBetId || 0;
+  },
 };

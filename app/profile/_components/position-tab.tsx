@@ -1,7 +1,15 @@
 "use client";
 
 import React from "react";
-import { Grid3x3, List, ChevronLeft, ChevronRight, Target } from "lucide-react";
+import {
+  Grid3x3,
+  List,
+  ChevronLeft,
+  ChevronRight,
+  Target,
+  Coins,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import FallbackImage from "@/components/fallback-image";
 import { Button } from "@/components/ui/button";
@@ -15,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { betService } from "@/services/bet.service";
 import { PriceDisplay } from "@/components/price/price-display";
+import { useClaimWinnings } from "@/hooks/mutation/use-claim-winnings";
 
 interface PositionTabProps {
   activeBets: any[];
@@ -29,20 +38,51 @@ export default function PositionTab({
   const [positionPage, setPositionPage] = React.useState(1);
   const itemsPerPage = 6;
 
+  const claimWinnings = useClaimWinnings();
+
   const totalPositionPages = Math.ceil(activeBets.length / itemsPerPage);
   const paginatedActiveBets = activeBets.slice(
     (positionPage - 1) * itemsPerPage,
     positionPage * itemsPerPage,
   );
 
+  const handleClaimWinnings = async (bet: any) => {
+    try {
+      const claimable = betService.isBetClaimable(bet);
+
+      if (!claimable.claimable) {
+        toast.error(claimable.reason || "Cannot claim this bet");
+
+        return;
+      }
+
+      if (!bet.market?.blockchainMarketId) {
+        toast.error("Market not available on blockchain");
+
+        return;
+      }
+
+      const betIndex = betService.getBetIndex(bet);
+
+      await claimWinnings.mutation.mutateAsync({
+        marketId: bet.market.blockchainMarketId,
+        betIndex: betIndex,
+      });
+
+      toast.success("Winnings claimed successfully!");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to claim winnings");
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Active Positions</CardTitle>
+            <CardTitle>Your Positions</CardTitle>
             <CardDescription>
-              Your current open bets and their status
+              Your active bets and claimable winnings
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -144,6 +184,44 @@ export default function PositionTab({
                       </p>
                     </div>
                   </div>
+
+                  {/* Claim button for won bets */}
+                  {bet.status === "won" && (
+                    <div className="pt-3 border-t mt-3">
+                      {betService.isBetClaimable(bet).claimable ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              Winnings:
+                            </span>
+                            <div className="flex items-center gap-1 font-semibold text-green-600">
+                              <Coins className="w-3 h-3" />
+                              <span>
+                                {betService.calculateWinnings(bet).formatted}{" "}
+                                APT
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            className="w-full"
+                            disabled={claimWinnings.isPending}
+                            size="sm"
+                            onClick={() => handleClaimWinnings(bet)}
+                          >
+                            {claimWinnings.isPending
+                              ? "Claiming..."
+                              : "Claim Winnings"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <Button disabled className="w-full" size="sm">
+                            {betService.getClaimButtonText(bet)}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -289,6 +289,11 @@ export default function Profile() {
 
   const userBets = user?.bets || [];
   const activeBets = userBets.filter((bet) => bet.status === "active");
+  const wonBets = userBets.filter((bet) => bet.status === "won");
+  const claimableBets = wonBets.filter(
+    (bet) => betService.isBetClaimable(bet as any).claimable,
+  );
+  const allPositions = [...activeBets, ...wonBets];
   const yieldSummary = yieldData?.data;
 
   return (
@@ -465,14 +470,26 @@ export default function Profile() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>
-                      The total number of bets you have placed on the platform
+                      The total number of active bets you have on the platform
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <span className="text-3xl sm:text-4xl lg:text-5xl leading-none capitalize">
-                {user?._count?.bets || 0}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl sm:text-4xl lg:text-5xl leading-none capitalize">
+                  {activeBets.length}
+                </span>
+                {claimableBets.length > 0 && (
+                  <div className="flex flex-col">
+                    <div className="text-xs text-muted-foreground">
+                      Claimable:
+                    </div>
+                    <div className="text-sm font-semibold text-green-600">
+                      {claimableBets.length}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col gap-2 p-4 sm:bg-transparent">
@@ -536,9 +553,7 @@ export default function Profile() {
                     <Info className="w-3 h-3 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>
-                      Your accumulated salary that can be withdrawn right now
-                    </p>
+                    <p>Your accumulated profit/loss from betting</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -568,6 +583,34 @@ export default function Profile() {
                 />
               </div>
             </div>
+
+            {/* Claimable Winnings Section */}
+            {claimableBets.length > 0 && (
+              <div className="flex flex-col gap-2 p-4 sm:bg-transparent border border-green-200 rounded-lg bg-green-50/50">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-green-700 font-medium">
+                    Claimable Winnings
+                  </span>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-green-600" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Winnings from resolved bets that you can claim now</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-3xl sm:text-4xl lg:text-5xl leading-none text-green-600">
+                    {claimableBets.length}
+                  </span>
+                  <span className="text-sm text-green-700">
+                    {claimableBets.length === 1 ? "bet ready" : "bets ready"} to
+                    claim
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-[0.5px] rounded-2xl">
@@ -580,7 +623,7 @@ export default function Profile() {
 
               <TabsContent className="space-y-4" value="position">
                 <PositionTab
-                  activeBets={activeBets}
+                  activeBets={allPositions}
                   userLoading={userLoading}
                 />
               </TabsContent>
